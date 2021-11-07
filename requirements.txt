@@ -1,0 +1,13 @@
+pycocotools
+scikit-image
+sklearn
+imutils
+opencv-python
+numpy
+matplotlib
+pandas
+torch
+torchvision
+pillow
+ipdb
+tqdm
