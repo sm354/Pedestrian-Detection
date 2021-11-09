@@ -11,8 +11,8 @@ from utils import *
 def parse_args():
     parser = argparse.ArgumentParser(description='Pedestrian Detection using pretrained HoG Person Detector')
     parser.add_argument('--root', type=str, default="./")
-    parser.add_argument('--test', type=str, default="./PennFudanPed/PennFudanPed_val.json")
-    parser.add_argument('--out', type=str, default="./PennFudanPed/PennFudanPed_val_predict.json")
+    parser.add_argument('--test', type=str, default="PennFudanPed_val.json")
+    parser.add_argument('--out', type=str, default="PennFudanPed_predict.json")
     args = parser.parse_args()
     return args
 
@@ -52,13 +52,13 @@ def main(root, test_json, output_json):
         img_id = img_dict['id']
 
         # predict the bboxes using pretrained HoG
-        bboxes, scores = hog.detectMultiScale(img) # bboxes.dtype is int, scores.dtype is float
-
+        bboxes, scores = hog.detectMultiScale(img, winStride=(2, 2), padding=(10, 10), scale=1.02) # bboxes.dtype is int, scores.dtype is float
+        scores = scores.reshape(-1)
+        
         if len(scores) != 0:
             # do NMS and append the predictions in COCO format
-            scores = scores.reshape(-1)
             init = len(scores)
-            bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.65) # bboxes.dtype is int, scores.dtype is float
+            bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.8) # bboxes.dtype is int, scores.dtype is float
             final = len(scores)
             nms_count += (init-final)
         

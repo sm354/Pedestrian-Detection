@@ -10,11 +10,10 @@ def draw_rectangles(img, bboxes, scores):
 
 def do_NMS(bboxes, scores, overlapThresh):
     # changes x,y,w,h to x,y,x2,y2
-    for idx in range(bboxes.shape[0]):
-        bboxes[idx, 2] += bboxes[idx, 0]
-        bboxes[idx, 3] += bboxes[idx, 1]
+    bboxes[:, 2] += bboxes[:, 0]
+    bboxes[:, 3] += bboxes[:, 1]
     
-    bboxes_nms = non_max_suppression(bboxes, probs=None, overlapThresh=overlapThresh)
+    bboxes_nms = non_max_suppression(bboxes, probs=scores, overlapThresh=overlapThresh)
     
     # get scores for these bounding boxes
     scores_nms = []
@@ -23,9 +22,8 @@ def do_NMS(bboxes, scores, overlapThresh):
     scores_nms = np.array(scores_nms).reshape(-1)
 
     # changes x,y,x2,y2 to x,y,w,h
-    for idx in range(bboxes_nms.shape[0]):
-        bboxes_nms[idx, 2] = bboxes_nms[idx, 2] - bboxes_nms[idx, 0] + 1
-        bboxes_nms[idx, 3] = bboxes_nms[idx, 3] - bboxes_nms[idx, 1] + 1
+    bboxes_nms[:, 2] -= bboxes_nms[:, 0]
+    bboxes_nms[:, 3] -= bboxes_nms[:, 1]
 
     return bboxes_nms, scores_nms
 
@@ -36,6 +34,6 @@ def save_img_with_pred(img, img_id, bboxes, scores, annotations, save_preds_dir)
     
     for idx, (x,y,w,h) in enumerate(annotations):
         x, y, w, h = int(x), int(y), int(w), int(h)
-        cv2.rectangle(img, (x,y), (x+w,y+h), (0,0,255), 2)
+        cv2.rectangle(img, (x,y), (x+w,y+h), (0,0,255), 1)
     
     cv2.imwrite(os.path.join(save_preds_dir, str(img_id)+".jpg"), img)
