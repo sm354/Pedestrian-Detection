@@ -15,8 +15,8 @@ from utils import *
 def parse_args():
     parser = argparse.ArgumentParser(description='Pedestrian Detection using pretrained Faster-RCNN')
     parser.add_argument('--root', type=str, default="./")
-    parser.add_argument('--test', type=str, default="./PennFudanPed/PennFudanPed_val.json")
-    parser.add_argument('--out', type=str, default="./PennFudanPed/PennFudanPed_prediction.json")
+    parser.add_argument('--test', type=str, default="PennFudanPed_val.json")
+    parser.add_argument('--out', type=str, default="PennFudanPed_frcnn_pred.json")
     args = parser.parse_args()
     return args
 
@@ -114,6 +114,7 @@ def main(root, test_json, output_json, device):
                 predictions.append(pred)
             
             # for visualization of bboxes and comparison with annotations
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             save_img_with_pred(img, img_id, bboxes, scores, list(annotations.loc[annotations['image_id'] == img_id]['bbox']), save_preds_dir)
     
     print("no predictions for %u images out of %u"%(no_pred_count, len(testset)))
@@ -123,6 +124,7 @@ def main(root, test_json, output_json, device):
     print("Non-Maximal Suppression reduced %u Bounding Boxes"%(nms_count))
 
 if __name__ == "__main__":
+    fix_seed(seed=4)
     args = parse_args()
     device = get_device()
     test_json = json.loads(open(args.test,'r').read())

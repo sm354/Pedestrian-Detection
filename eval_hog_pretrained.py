@@ -7,12 +7,14 @@ import ipdb
 import pandas as pd
 from tqdm import tqdm
 from utils import *
+import torch
+from ipdb import set_trace
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Pedestrian Detection using pretrained HoG Person Detector')
     parser.add_argument('--root', type=str, default="./")
     parser.add_argument('--test', type=str, default="PennFudanPed_val.json")
-    parser.add_argument('--out', type=str, default="PennFudanPed_predict.json")
+    parser.add_argument('--out', type=str, default="PennFudanPed_pretrn_hog_pred.json")
     args = parser.parse_args()
     return args
 
@@ -30,6 +32,7 @@ def main(root, test_json, output_json):
     hog = cv2.HOGDescriptor()
     hog.setSVMDetector(hog.getDefaultPeopleDetector())
     show_hog_params(hog)
+    sigmoid = torch.nn.Sigmoid() # use sigmoid to normalize svm scores
 
     # predictions will be saved iteratively
     predictions = []
@@ -52,11 +55,11 @@ def main(root, test_json, output_json):
         img_id = img_dict['id']
 
         # predict the bboxes using pretrained HoG
-        bboxes, scores = hog.detectMultiScale(img, winStride=(2, 2), padding=(10, 10), scale=1.02) # bboxes.dtype is int, scores.dtype is float
-        scores = scores.reshape(-1)
-        
+        bboxes, scores = hog.detectMultiScale(img, winStride=(2, 2), padding=(10, 10), scale=1.02) # bboxes.dtype is int, scores.dtype is float        
         if len(scores) != 0:
             # do NMS and append the predictions in COCO format
+            scores = np.absolute(scores.reshape(-1)).astype(float)
+            bboxes = bboxes.astype(int)
             init = len(scores)
             bboxes, scores = do_NMS(bboxes, scores, overlapThresh=0.8) # bboxes.dtype is int, scores.dtype is float
             final = len(scores)
@@ -71,7 +74,7 @@ def main(root, test_json, output_json):
         for bb, score in zip(bboxes, scores):
             pred = {}
             pred["image_id"] = img_id
-            pred["score"] = float(score)
+            pred["score"] = sigmoid(torch.tensor(float(score))).item()
             pred["category_id"] = 1
             pred["bbox"] = bb.astype(float).tolist()
             predictions.append(pred)
@@ -86,6 +89,7 @@ def main(root, test_json, output_json):
     print("Non-Maximal Suppression reduced %u Bounding Boxes"%(nms_count))
 
 if __name__ == "__main__":
+    fix_seed(seed=4)
     args = parse_args()
     test_json = json.loads(open(args.test,'r').read())
     main(args.root, test_json, args.out)

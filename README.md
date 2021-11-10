@@ -25,6 +25,7 @@ unzip PennFudanPed.zip
 ```
 
 ## Running Models
+
 #### 1. Pretrained HoG Detector
 
 ```bash
@@ -48,7 +49,7 @@ python eval_hog_custom.py --root <path to dataset root directory> --test <path t
 #### 3. Faster RCNN
 
 ```bash
-python eval_faster_rcnn.py --root <path to dataset root directory> --test <path to test json> --out <path to output json> --model <path to pretrained Faster RCNN weights file>
+python eval_faster_rcnn.py --root <path to dataset root directory> --test <path to test json> --out <path to output json>
 ```
 
 ### Evaluation script
